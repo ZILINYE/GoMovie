@@ -48,7 +48,10 @@ func ReadConf() StoreType {
 	// 要记得关闭
 	defer jsonFile.Close()
 	var new Config
-	byteValue, _ := ioutil.ReadAll(jsonFile)
+	byteValue, err := ioutil.ReadAll(jsonFile)
+	if err!=nil{
+		fmt.Print(err)
+	}
 	json.Unmarshal([]byte(byteValue), &new)
 	new1 := new.RecordType
 
@@ -65,22 +68,25 @@ func (t FileDb) CheckRecord(m []Movie_info) []Movie_info {
 		log.Println(err)
 	}
 	fmt.Println(path)
-	f, _ := os.OpenFile(t.File_Name, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	f, _ := os.OpenFile(t.File_Name, os.O_RDONLY|os.O_CREATE|os.O_APPEND, 0644)
 
-	var i = false
+
 	defer f.Close()
 
 	scanner := bufio.NewScanner(f)
 
 	for _, value := range m {
+		var i = false
 		for scanner.Scan() {
-			if value.D_url == scanner.Text() {
+			if strings.TrimSpace(value.Title) == scanner.Text() {
 				i = true
+				break
 			}
 		}
-		if i != true {
+		if i == false {
 			new = append(new, value)
-			f.WriteString(strings.TrimSpace(value.Title) + "\n")
+			f.WriteString(strings.TrimSpace(value.Title))
+			f.WriteString("\n")
 
 		}
 	}

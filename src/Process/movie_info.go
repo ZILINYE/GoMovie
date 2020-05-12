@@ -75,6 +75,7 @@ func Search(Movie_name string) ([]string, []string) {
 		url = "http://www.y80s.com" + url
 		url_list = append(url_list, url)
 		title_list = append(title_list, title)
+
 	})
 	return title_list, url_list
 }
@@ -116,8 +117,6 @@ func Get_urls(o *Outside_pattern) []Movie_info {
 	//Pass urls (array) to the Get_detail function
 	Get_detail(urls, o.Thread_num)
 	firstmatch := Filter(detail, o.Score)
-	//second_match := CheckRecord(first_match)
-	//Downloader(second_match)
 
 	return firstmatch
 
@@ -188,22 +187,20 @@ func Spider(s []string, i int) {
 func Downloader(Download_list []Movie_info) {
 	if len(Download_list) > 0 {
 		for _, value := range Download_list {
-			//err := Api(value.D_url, cookie)
+			err := Api(value.D_url, cookie)
 
-			//if err != nil {
-			//	fmt.Println(err)
-			//	err_msg := "Error : " + err.Error()
-			//	//Logging.Write_log(err_msg)
-			//	fmt.Printf(err_msg)
-			//
-			//}
-			//if err == nil {
-			//	m := "Downloaded Movie : " + value.Douban + strings.TrimSpace(value.Title) + "to the Synology Nas  "
-			//	fmt.Printf("Send URL: %v to the Synology Nas \n", strings.TrimSpace(value.Title))
-			//	msg := "Success : " + m
-			//	//Logging.Write_log(msg)
-			//	fmt.Printf(msg)
-			//}
+			if err != nil {
+				fmt.Println(err)
+				err_msg := "Error : " + err.Error()
+				fmt.Printf(err_msg)
+
+			}
+			if err == nil {
+				m := "Downloaded Movie : " + value.Douban + strings.TrimSpace(value.Title) + "to the Synology Nas  "
+				fmt.Printf("Send URL: %v to the Synology Nas \n", strings.TrimSpace(value.Title))
+				msg := "Success : " + m
+				fmt.Printf(msg)
+			}
 			fmt.Printf("%v", value.Title)
 		}
 	} else {

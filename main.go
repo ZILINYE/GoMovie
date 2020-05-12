@@ -59,9 +59,10 @@ func main() {
 			name := bufio.NewScanner(os.Stdin)
 			name.Scan()
 			title_list, url_list := Process.Search(name.Text())
-
+			fmt.Printf("|%-6s|%-12s|%-6s\n","序号","电影名","详情链接")
 			for i := 0; i < len(title_list); i++ {
-				fmt.Printf("%v : %v\n", i+1, strings.TrimSpace(title_list[i]))
+				//fmt.Printf("%v : %v   详情: %v\n", i+1, strings.TrimSpace(title_list[i]),url_list[i])
+				fmt.Printf("|%-6s|%-12s|%-6s\n", strconv.Itoa(i+1), strings.TrimSpace(title_list[i]),url_list[i])
 			}
 			fmt.Printf("%v : Cancel\n", y)
 			fmt.Print("Choose Number : ")
