@@ -8,6 +8,7 @@ import (
 	"net/http"
 	"net/url"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -16,6 +17,7 @@ var cookie string
 var urls []string
 var wg sync.WaitGroup
 var detail []Movie_info
+
 type Movie_info struct {
 	D_url    string // Movie Download URL
 	Title    string // Movie Title
@@ -31,9 +33,11 @@ type Outside_pattern struct {
 
 //Initialize Movie_info.Outside_pattern and NAS API
 func Initialize(homeurl string, score float64, Thread_num int) Outside_pattern {
+
 	fmt.Println("Initializing The Spider")
 	result := &Outside_pattern{Home_url: homeurl, Score: score, Thread_num: Thread_num}
 	cookie = Api_cookie()
+
 	return *result
 }
 
@@ -91,7 +95,7 @@ func Download_search(url string) string {
 }
 
 // Crawl the home page and get all movie page url
-func Get_urls(o *Outside_pattern) {
+func Get_urls(o *Outside_pattern) []Movie_info {
 	resp, err := http.Get(o.Home_url)
 	if err != nil {
 		panic(err)
@@ -108,12 +112,27 @@ func Get_urls(o *Outside_pattern) {
 		url = "http://www.y80s.com" + url
 		urls = append(urls, url)
 	})
+
 	//Pass urls (array) to the Get_detail function
 	Get_detail(urls, o.Thread_num)
-	WriteJson(detail)
-	Downloader(detail)
+	firstmatch := Filter(detail, o.Score)
+	//second_match := CheckRecord(first_match)
+	//Downloader(second_match)
+
+	return firstmatch
 
 }
+func Filter(Download_list []Movie_info, min_score float64) []Movie_info {
+	var matched []Movie_info
+	for _, value := range Download_list {
+		score, _ := strconv.ParseFloat(value.Douban, 64)
+		if score >= min_score {
+			matched = append(matched, value)
+		}
+	}
+	return matched
+}
+
 func Get_detail(u []string, t int) {
 	// Calculate number of the tasks for each thread
 	each_num := int(math.Ceil(float64(len(u)) / float64(t)))
@@ -185,12 +204,11 @@ func Downloader(Download_list []Movie_info) {
 			//	//Logging.Write_log(msg)
 			//	fmt.Printf(msg)
 			//}
-			fmt.Printf("%v",value.Title)
+			fmt.Printf("%v", value.Title)
 		}
 	} else {
 		fmt.Print("No Available Movie Found\n")
 	}
-
 
 }
 
@@ -204,7 +222,6 @@ func Api(url, co string) error {
 	client := &http.Client{}
 	resp, _ := client.Do(result)
 	_, err := ioutil.ReadAll(resp.Body)
-
 
 	return err
 }

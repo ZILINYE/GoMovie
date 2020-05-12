@@ -53,23 +53,23 @@ func main() {
 
 	} else if g {
 		// Download Movie By providing Movie name
-		y:=0
-		for y==0 {
+		y := 0
+		for y == 0 {
 			fmt.Print("Search Movie : ")
 			name := bufio.NewScanner(os.Stdin)
 			name.Scan()
 			title_list, url_list := Process.Search(name.Text())
-			
+
 			for i := 0; i < len(title_list); i++ {
 				fmt.Printf("%v : %v\n", i+1, strings.TrimSpace(title_list[i]))
 			}
-			fmt.Printf("%v : Cancel\n",y)
+			fmt.Printf("%v : Cancel\n", y)
 			fmt.Print("Choose Number : ")
 			num := bufio.NewScanner(os.Stdin)
 			num.Scan()
 			x := num.Text()
 			y, _ := strconv.Atoi(x)
-			if y!=0{
+			if y != 0 {
 				dl_url := Process.Download_search(url_list[y-1])
 				cookie := Process.Api_cookie()
 				err := Process.Api(dl_url, cookie)
@@ -81,13 +81,15 @@ func main() {
 			}
 
 		}
-		
 
 	} else {
 		// Daily Schedule spider
 		initialize := Process.Initialize(home_url, min_score, thread_num)
+		config := Process.ReadConf()
+		firstmatch := Process.Get_urls(&initialize)
+		secondmatch := config.CheckRecord(firstmatch)
+		Process.Downloader(secondmatch)
 
-		Process.Get_urls(&initialize)
 	}
 
 	end := time.Now()
