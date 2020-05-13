@@ -10,8 +10,9 @@
       "Mongo_Port": "27017",
       "DB_Name": "Movie",
       "Collection_Name": "GoMovie"
-      }
-
+      },
+  "SynologyUserName": "tobinye",
+  "SynologyUserPass": "YZLmm1994"
 }
 
 

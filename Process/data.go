@@ -29,14 +29,16 @@ type MongoDB struct {
 }
 
 type Config struct {
-	RecordType string  `json:"RecordType"`
-	FileT      FileDb  `json:"FileDb"`
-	MongoT     MongoDB `json:"MongoDb"`
+	RecordType       string  `json:"RecordType"`
+	FileT            FileDb  `json:"FileDb"`
+	MongoT           MongoDB `json:"MongoDb"`
+	SynologyUserName string  `json:"SynologyUserName"`
+	SynologyUserPass string  `json:"SynologyUserPass"`
 }
 
 var new []Movie_info
 
-func ReadConf() StoreType {
+func ReadConf() (StoreType, string, string) {
 	// 打开json文件
 	jsonFile, err := os.Open("conf.json")
 
@@ -49,16 +51,17 @@ func ReadConf() StoreType {
 	defer jsonFile.Close()
 	var new Config
 	byteValue, err := ioutil.ReadAll(jsonFile)
-	if err!=nil{
+	if err != nil {
 		fmt.Print(err)
 	}
 	json.Unmarshal([]byte(byteValue), &new)
 	new1 := new.RecordType
-
+	uname := new.SynologyUserName
+	upass := new.SynologyUserPass
 	if new1 == "FileDb" {
-		return new.FileT
+		return new.FileT, uname, upass
 	} else {
-		return new.MongoT
+		return new.MongoT, uname, upass
 	}
 }
 func (t FileDb) CheckRecord(m []Movie_info) []Movie_info {
@@ -69,7 +72,6 @@ func (t FileDb) CheckRecord(m []Movie_info) []Movie_info {
 	}
 	fmt.Println(path)
 	f, _ := os.OpenFile(t.File_Name, os.O_RDONLY|os.O_CREATE|os.O_APPEND, 0644)
-
 
 	defer f.Close()
 
@@ -100,7 +102,8 @@ func (t FileDb) CheckRecord(m []Movie_info) []Movie_info {
 
 func (t MongoDB) CheckRecord(m []Movie_info) []Movie_info {
 	// Initialize Mongo DB Connection
-	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017")
+
+	clientOptions := options.Client().ApplyURI("mongodb://localhost:27017" + t.Mongo_Ip + ":" + t.Mongo_Port)
 	client, err := mongo.Connect(context.TODO(), clientOptions)
 
 	if err != nil {
@@ -112,7 +115,7 @@ func (t MongoDB) CheckRecord(m []Movie_info) []Movie_info {
 	if err != nil {
 		log.Fatal(err)
 	}
-	collection := client.Database("Movie").Collection("Download_info")
+	collection := client.Database(t.DB_Name).Collection(t.Collection_Name)
 	// For Loop Check if Movie had been spider before
 	for _, value := range m {
 		var result_db Movie_info

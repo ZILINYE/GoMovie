@@ -17,6 +17,7 @@ var cookie string
 var urls []string
 var wg sync.WaitGroup
 var detail []Movie_info
+var conf []Movie_info
 
 type Movie_info struct {
 	D_url    string // Movie Download URL
@@ -32,19 +33,19 @@ type Outside_pattern struct {
 }
 
 //Initialize Movie_info.Outside_pattern and NAS API
-func Initialize(homeurl string, score float64, Thread_num int) Outside_pattern {
+func Initialize(homeurl string, score float64, Thread_num int, uname string, upass string) Outside_pattern {
 
 	fmt.Println("Initializing The Spider")
 	result := &Outside_pattern{Home_url: homeurl, Score: score, Thread_num: Thread_num}
-	cookie = Api_cookie()
+	cookie = Api_cookie(uname, upass)
 
 	return *result
 }
 
 // Initialize API Cookie
-func Api_cookie() string {
+func Api_cookie(uname string, upass string) string {
 	// Login Synology Nas Via API
-	Session := "http://192.168.2.20:5000/webapi/auth.cgi?api=SYNO.API.Auth&version=2&method=login&account=***&passwd=***&session=DownloadStation&format=cookie"
+	Session := "http://192.168.2.20:5000/webapi/auth.cgi?api=SYNO.API.Auth&version=2&method=login&account=" + uname + "&passwd=" + upass + "&session=DownloadStation&format=cookie"
 	result1, _ := http.Get(Session)
 	//Initial Login Cookie
 	coo := result1.Cookies()[0]
@@ -197,11 +198,9 @@ func Downloader(Download_list []Movie_info) {
 			}
 			if err == nil {
 				m := "Downloaded Movie : " + value.Douban + strings.TrimSpace(value.Title) + "to the Synology Nas  "
-				fmt.Printf("Send URL: %v to the Synology Nas \n", strings.TrimSpace(value.Title))
 				msg := "Success : " + m
 				fmt.Printf(msg)
 			}
-			fmt.Printf("%v", value.Title)
 		}
 	} else {
 		fmt.Print("No Available Movie Found\n")
@@ -212,7 +211,6 @@ func Downloader(Download_list []Movie_info) {
 // synology API (Send Download URL to Synology)
 func Api(url, co string) error {
 	result, _ := http.NewRequest("GET", "http://192.168.2.20:5000/webapi/DownloadStation/task.cgi?api=SYNO.DownloadStation.Task&version=2&method=create&uri="+url, nil)
-	fmt.Printf(url)
 	//Add Cookie to Synology Method API
 	result.AddCookie(&http.Cookie{Name: "id", Value: cookie})
 

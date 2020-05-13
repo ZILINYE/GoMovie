@@ -35,6 +35,8 @@ func init() {
 	flag.Usage = usage
 }
 func main() {
+
+	config, uname, upass := Process.ReadConf() // Read Conf.json Get Data Saving Method and NAS User Name And Password
 	flag.Parse()
 	if h {
 		flag.Usage()
@@ -43,7 +45,7 @@ func main() {
 	now := time.Now()
 	// Download Movie By providing the Download URL
 	if Download_url != "none" {
-		cookie := Process.Api_cookie()
+		cookie := Process.Api_cookie(uname, upass)
 		err := Process.Api(Download_url, cookie)
 		if err != nil {
 			fmt.Println(err)
@@ -61,7 +63,6 @@ func main() {
 			title_list, url_list := Process.Search(name.Text())
 			fmt.Printf("|%-6s|%-12s|%-6s\n", "序号", "电影名", "详情链接")
 			for i := 0; i < len(title_list); i++ {
-				//fmt.Printf("%v : %v   详情: %v\n", i+1, strings.TrimSpace(title_list[i]),url_list[i])
 				fmt.Printf("|%-6s|%-12s|%-6s\n", strconv.Itoa(i+1), strings.TrimSpace(title_list[i]), url_list[i])
 			}
 			fmt.Printf("%v : Cancel\n", y)
@@ -72,7 +73,7 @@ func main() {
 			y, _ := strconv.Atoi(x)
 			if y != 0 {
 				dl_url := Process.Download_search(url_list[y-1])
-				cookie := Process.Api_cookie()
+				cookie := Process.Api_cookie(uname, upass)
 				err := Process.Api(dl_url, cookie)
 				if err != nil {
 					fmt.Println(err)
@@ -85,8 +86,8 @@ func main() {
 
 	} else {
 		// Daily Schedule spider
-		initialize := Process.Initialize(home_url, min_score, thread_num)
-		config := Process.ReadConf()
+
+		initialize := Process.Initialize(home_url, min_score, thread_num, uname, upass)
 		firstmatch := Process.Get_urls(&initialize)
 		secondmatch := config.CheckRecord(firstmatch)
 		Process.Downloader(secondmatch)
