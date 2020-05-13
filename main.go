@@ -4,7 +4,7 @@ import (
 	"bufio"
 	"flag"
 	"fmt"
-	"github.com/ZILINYE/GoMovie/src/Process"
+	"github.com/ZILINYE/GoMovie/Process"
 	"os"
 	"strconv"
 	"strings"
