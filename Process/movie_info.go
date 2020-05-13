@@ -44,7 +44,7 @@ func Initialize(homeurl string, score float64, Thread_num int) Outside_pattern {
 // Initialize API Cookie
 func Api_cookie() string {
 	// Login Synology Nas Via API
-	Session := "http://192.168.2.20:5000/webapi/auth.cgi?api=SYNO.API.Auth&version=2&method=login&account=Tobinye&passwd=YZLmm1994&session=DownloadStation&format=cookie"
+	Session := "http://192.168.2.20:5000/webapi/auth.cgi?api=SYNO.API.Auth&version=2&method=login&account=***&passwd=***&session=DownloadStation&format=cookie"
 	result1, _ := http.Get(Session)
 	//Initial Login Cookie
 	coo := result1.Cookies()[0]
