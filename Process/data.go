@@ -71,7 +71,7 @@ func (t FileDb) CheckRecord(m []Movie_info) []Movie_info {
 		log.Println(err)
 	}
 	fmt.Println(path)
-	f, _ := os.OpenFile(t.File_Name, os.O_RDONLY|os.O_CREATE|os.O_APPEND, 0644)
+	f, _ := os.OpenFile(t.File_Name, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0644)
 
 	defer f.Close()
 
