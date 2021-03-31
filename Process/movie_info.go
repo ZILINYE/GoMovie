@@ -2,7 +2,6 @@ package Process
 
 import (
 	"fmt"
-	"github.com/PuerkitoBio/goquery"
 	"io/ioutil"
 	"math"
 	"net/http"
@@ -11,6 +10,8 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+
+	"github.com/PuerkitoBio/goquery"
 )
 
 var cookie string
@@ -54,31 +55,66 @@ func Api_cookie(uname string, upass string) string {
 	return cookie
 }
 
-// Search Movie By Providing Movie Name
-func Search(Movie_name string) ([]string, []string) {
-	var title_list []string
-	var url_list []string
+func HttpRequest(method string, urlstring string, form *strings.Reader, header bool) *goquery.Document {
 	hc := http.Client{}
-	form := url.Values{}
-	form.Add("skey", Movie_name)
-	req, _ := http.NewRequest("POST", "http://www.y80s.com/movie/search/", strings.NewReader(form.Encode()))
-	req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	req, _ := http.NewRequest(method, urlstring, form)
+	if header {
+		req.Header.Add("Content-Type", "application/x-www-form-urlencoded")
+	}
 	resp, err := hc.Do(req)
-
 	if err != nil {
 		fmt.Println(err)
 	}
 	doc, _ := goquery.NewDocumentFromReader(resp.Body)
-	doc.Find(".h3 a").Each(func(i int, selection *goquery.Selection) {
+	return doc
+}
 
+// Search Movie with DandanZan
+func OnlineSearch(Movie_name string) [][]string {
+	var resultList [][]string
+	var page int = 0
+	form := url.Values{}
+	urlstring := "https://www.dandanzan.com/so/" + Movie_name + "-" + Movie_name + "-" + strconv.Itoa(page) + "-onclick.html"
+	doc := HttpRequest("POST", urlstring, strings.NewReader(form.Encode()), false)
+	pages := doc.Find(".pagination ul li").Length() - 2
+	if pages < 0 {
+		pages = 0
+	}
+	for page <= pages {
+		urlstring := "https://www.dandanzan.com/so/" + Movie_name + "-" + Movie_name + "-" + strconv.Itoa(page) + "-onclick.html"
+		doc := HttpRequest("POST", urlstring, strings.NewReader(form.Encode()), false)
+		doc.Find(".lists-content ul li").Each(func(i int, selection *goquery.Selection) {
+			url, _ := selection.Find("a").Attr("href")
+			title, _ := selection.Find("a .thumb").Attr("alt")
+			quality := selection.Find("a .note").Text()
+			year := selection.Find("a .countrie>span").First().Text()
+			country := selection.Find("a .countrie>span").Last().Text()
+			url = "https://www.dandanzan.com" + url
+			result := []string{strconv.Itoa(i + 1 + 24*(page)), title, quality, year, country, url}
+			resultList = append(resultList, result)
+		})
+		page++
+	}
+	return resultList
+}
+
+// Search Movie By Providing Movie Name
+func Search(Movie_name string) [][]string {
+	var resultList [][]string
+	form := url.Values{}
+	form.Add("keyword", Movie_name)
+	urlstring := "https://www.80s.tw/search"
+	doc := HttpRequest("POST", urlstring, strings.NewReader(form.Encode()), true)
+	// should display movie list
+	doc.Find(".search_list li a").Each(func(i int, selection *goquery.Selection) {
 		url, _ := selection.Attr("href")
-		title := selection.Text()
-		url = "http://www.y80s.com" + url
-		url_list = append(url_list, url)
-		title_list = append(title_list, title)
-
+		title := strings.ReplaceAll(selection.Text(), " ", "")
+		title = strings.ReplaceAll(title, "\n", " ")
+		url = "https://www.80s.tw" + url
+		result := []string{strconv.Itoa(i + 1), title, url}
+		resultList = append(resultList, result)
 	})
-	return title_list, url_list
+	return resultList
 }
 
 // Download Specific Movie

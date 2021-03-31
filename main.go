@@ -5,9 +5,9 @@ import (
 	"flag"
 	"fmt"
 	"github.com/ZILINYE/GoMovie/Process"
+	"github.com/olekukonko/tablewriter"
 	"os"
 	"strconv"
-	"strings"
 	"time"
 )
 
@@ -17,8 +17,15 @@ var min_score float64
 var thread_num int
 
 var Download_url string
+
+// help menu
 var h bool
+
+// Search Movie
 var g bool
+
+// Online Watch
+var online bool
 
 func init() {
 	flag.BoolVar(&h, "h", false, "This help")
@@ -65,11 +72,14 @@ func main() {
 				fmt.Print("Search Movie : ")
 				name := bufio.NewScanner(os.Stdin)
 				name.Scan()
-				title_list, url_list := Process.Search(name.Text())
-				fmt.Printf("|%-6s|%-12s|%-6s\n", "序号", "电影名", "详情链接")
-				for i := 0; i < len(title_list); i++ {
-					fmt.Printf("|%-6s|%-12s|%-6s\n", strconv.Itoa(i+1), strings.TrimSpace(title_list[i]), url_list[i])
+				resultList := Process.Search(name.Text())
+				table := tablewriter.NewWriter(os.Stdout)
+				table.SetHeader([]string{"Num", "Movie Name", "Detail Link"})
+				for _, v := range resultList {
+					table.Append(v)
 				}
+				table.Render()
+
 				fmt.Printf("%v : Cancel\n", y)
 				fmt.Print("Choose Number : ")
 				num := bufio.NewScanner(os.Stdin)
@@ -77,12 +87,14 @@ func main() {
 				x := num.Text()
 				y, _ := strconv.Atoi(x)
 				if y != 0 {
-					dl_url := Process.Download_search(url_list[y-1])
+					fmt.Println(resultList[y-1][2])
+					dlUrl := Process.Download_search(resultList[y-1][2])
 					cookie := Process.Api_cookie(uname, upass)
-					err := Process.Api(dl_url, cookie)
+					err := Process.Api(dlUrl, cookie)
 					if err != nil {
 						fmt.Println(err)
 					} else {
+						fmt.Println("Downloading ", resultList[y-1][1], " Via Link : ", resultList[y-1][2])
 						fmt.Println("Send URL to Synology Successfully")
 					}
 				}
@@ -101,9 +113,53 @@ func main() {
 			spend := end.Sub(now)
 			fmt.Printf("total spend %v s\n", spend)
 			return
+		} else if online {
+			//	Online Watch via DanDanZan
+			fmt.Print("Online Watch Menu\n\nSelect Option : \n1.Search Movie for Online Watch\n2.Check Notification\n3.Notification Setting\n4.Cancel\n\n\nYou Select :")
+			option := bufio.NewScanner(os.Stdin)
+			option.Scan()
+			cnum := option.Text()
+			num, _ := strconv.Atoi(cnum)
+			if num == 1 {
+				y := 0
+				for y == 0 {
+					fmt.Print("Search Movie : ")
+					name := bufio.NewScanner(os.Stdin)
+					name.Scan()
+					resultList := Process.OnlineSearch(name.Text())
+					table := tablewriter.NewWriter(os.Stdout)
+					table.SetHeader([]string{"Num", "Movie Name", "Video Quality", "year", "Country", "Detail Link"})
+					for _, v := range resultList {
+						table.Append(v)
+					}
+					table.Render()
+
+					//fmt.Printf("%v : Cancel\n", y)
+					//fmt.Print("Choose Number : ")
+					//num := bufio.NewScanner(os.Stdin)
+					//num.Scan()
+					//x := num.Text()
+					//y, _ := strconv.Atoi(x)
+					//if y != 0 {
+					//	fmt.Println(resultList[y-1][2])
+					//	dlUrl := Process.Download_search(resultList[y-1][2])
+					//	cookie := Process.Api_cookie(uname, upass)
+					//	err := Process.Api(dlUrl, cookie)
+					//	if err != nil {
+					//		fmt.Println(err)
+					//	} else {
+					//		fmt.Println("Downloading ",resultList[y-1][1]," Via Link : ",resultList[y-1][2])
+					//		fmt.Println("Send URL to Synology Successfully")
+					//	}
+					//}
+
+				}
+				return
+			}
+
 		} else {
 			// Daily Schedule spider
-			fmt.Print("Main Menu\n\nSelect Option : \n1.Open Spider\n2.Send URL\n3.Search Movie\n4.Cancel\n\n\nYou Select :")
+			fmt.Print("Main Menu\n\nSelect Option : \n1.Open Spider\n2.Send URL\n3.Search Movie\n 4.Watch Online\n5.Cancel\n\n\nYou Select :")
 			option := bufio.NewScanner(os.Stdin)
 			option.Scan()
 			cnum := option.Text()
@@ -141,6 +197,9 @@ func main() {
 
 			} else if num == 3 {
 				g = true
+			} else if num == 4 {
+				// Go to the DanDanZan Submenu
+				online = true
 			} else {
 				return
 			}
