@@ -115,7 +115,7 @@ func main() {
 			return
 		} else if online {
 			//	Online Watch via DanDanZan
-			fmt.Print("Online Watch Menu\n\nSelect Option : \n1.Search Movie for Online Watch\n2.Check Notification\n3.Notification Setting\n4.Cancel\n\n\nYou Select :")
+			fmt.Print("Online Watch Menu\n\nSelect Option : \n1.Search Movie\n2.Check Notification\n3.Notification Setting\n4.Cancel\n\n\nYou Select :")
 			option := bufio.NewScanner(os.Stdin)
 			option.Scan()
 			cnum := option.Text()
@@ -128,30 +128,32 @@ func main() {
 					name.Scan()
 					resultList := Process.OnlineSearch(name.Text())
 					table := tablewriter.NewWriter(os.Stdout)
-					table.SetHeader([]string{"Num", "Movie Name", "Video Quality", "year", "Country", "Detail Link"})
+					table.SetHeader([]string{"Num", "Movie Name", "Video Quality", "year", "Country"})
 					for _, v := range resultList {
-						table.Append(v)
+						table.Append(v[:len(v)-1])
 					}
 					table.Render()
-
-					//fmt.Printf("%v : Cancel\n", y)
-					//fmt.Print("Choose Number : ")
-					//num := bufio.NewScanner(os.Stdin)
-					//num.Scan()
-					//x := num.Text()
-					//y, _ := strconv.Atoi(x)
-					//if y != 0 {
-					//	fmt.Println(resultList[y-1][2])
-					//	dlUrl := Process.Download_search(resultList[y-1][2])
-					//	cookie := Process.Api_cookie(uname, upass)
-					//	err := Process.Api(dlUrl, cookie)
-					//	if err != nil {
-					//		fmt.Println(err)
-					//	} else {
-					//		fmt.Println("Downloading ",resultList[y-1][1]," Via Link : ",resultList[y-1][2])
-					//		fmt.Println("Send URL to Synology Successfully")
-					//	}
-					//}
+					fmt.Printf("%v : Cancel\n", y)
+					fmt.Print("Choose Number : ")
+					num := bufio.NewScanner(os.Stdin)
+					num.Scan()
+					x := num.Text()
+					y, _ := strconv.Atoi(x)
+					if y != 0 {
+						fmt.Printf("Your selection is %v \n options:\n1.Watch Online\n2.Add to Notification\n", resultList[y-1][1])
+						fmt.Print("Select : ")
+						num.Scan()
+						o, _ := strconv.Atoi(num.Text())
+						if o == 1 {
+							fmt.Print("Open Browser in 3 sec ..\n")
+							time.Sleep(3 * time.Second)
+							Process.OpenBrowser(resultList[y-1][5])
+							fmt.Print("Finished")
+							break
+						} else if o == 2 {
+							fmt.Print("Add to notification\n")
+						}
+					}
 
 				}
 				return
@@ -159,7 +161,7 @@ func main() {
 
 		} else {
 			// Daily Schedule spider
-			fmt.Print("Main Menu\n\nSelect Option : \n1.Open Spider\n2.Send URL\n3.Search Movie\n 4.Watch Online\n5.Cancel\n\n\nYou Select :")
+			fmt.Print("Main Menu\n\nSelect Option : \n1.Open Spider\n2.Send URL\n3.Search Movie\n4.Watch Online\n5.Cancel\n\n\nYou Select :")
 			option := bufio.NewScanner(os.Stdin)
 			option.Scan()
 			cnum := option.Text()
